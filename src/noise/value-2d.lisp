@@ -1,0 +1,33 @@
+(in-package #:mfiano.lib.gen.noise)
+
+(defstruct (value-2d
+            (:include sampler-2d)
+            (:constructor %make-value-2d)
+            (:predicate nil)
+            (:copier nil)))
+
+(defun make-value-2d (&key (seed 0))
+  (check-type seed u64)
+  (let ((sampler (%make-value-2d)))
+    (setf (seed sampler) seed)
+    sampler))
+
+(define-ftype sample-value-2d (value-2d fixnum f32 fixnum f32) f32)
+(declaim (inline sample-value-2d))
+(defun sample-value-2d (sampler xi xf yi yf)
+  (declare (optimize (speed 3)))
+  (let* ((seed (%seed sampler))
+         (x1 (u64* xi +prime-x+))
+         (y1 (u64* yi +prime-y+))
+         (x2 (u64+ x1 +prime-x+))
+         (y2 (u64+ y1 +prime-y+))
+         (x3 (curve3 xf))
+         (y3 (curve3 yf))
+         (h1 (value-hash-2d seed x1 y1))
+         (h2 (value-hash-2d seed x2 y1))
+         (h3 (value-hash-2d seed x1 y2))
+         (h4 (value-hash-2d seed x2 y2)))
+    (1- (s32:lerp (s32:lerp h1 h2 x3) (s32:lerp h3 h4 x3) y3))))
+
+(defmethod sample-function ((sampler value-2d))
+  #'sample-value-2d)

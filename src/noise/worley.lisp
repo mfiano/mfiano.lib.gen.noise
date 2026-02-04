@@ -1,0 +1,25 @@
+(in-package #:mfiano.lib.gen.noise)
+
+(deftype worley-output () '(member :f1 :f2 :+ :- :* :/ :value))
+(deftype worley-metric () '(member :manhattan :euclidean :euclidean-squared :chebyshev :minkowski4))
+
+(defun make-lookup-table/worley (sampler)
+  (let* ((length (* (expt 2 (1- (dimensions sampler))) 256))
+         (table (rng:vector/f64 (rng sampler) length)))
+    (dotimes (i length)
+      (setf (aref table i) (1- (* (aref table i) 2))))
+    table))
+
+(declaim (inline worley-output))
+(defun worley-output (output-type metric hash min max)
+  (multiple-value-bind (min max) (if (eq metric :euclidean)
+                                     (values (sqrt min) (sqrt max))
+                                     (values min max))
+    (ecase output-type
+      (:f1 min)
+      (:f2 max)
+      (:+ (* (+ min max) 0.5f0))
+      (:- (- max min))
+      (:* (* min max))
+      (:/ (/ min max))
+      (:value (* (u32 hash) #.(/ (f64 +hash2+)))))))
