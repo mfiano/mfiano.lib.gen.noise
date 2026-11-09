@@ -162,6 +162,19 @@
                    1f-5))))))
     (is (> low-points 10))))
 
+(test composer.hybrid-multi-2d.every-default-octave-shows
+  (let* ((sampler (n:make-hybrid-multi-2d #'n:make-perlin-2d :seed 7))
+         (octaves (n::fractal-octaves sampler))
+         (fewer (n:make-hybrid-multi-2d #'n:make-perlin-2d :seed 7 :octaves (1- octaves)))
+         (change 0))
+    (dotimes (i 40)
+      (dotimes (j 40)
+        (let ((x (* i 0.173d0))
+              (y (* j 0.211d0)))
+          (setf change (max change (abs (- (sample-at #'n:sample-hybrid-multi-2d sampler x y)
+                                           (sample-at #'n:sample-hybrid-multi-2d fewer x y))))))))
+    (is (> change 0.02))))
+
 (test composer.fbm-2d.one-octave-is-the-source-at-large-coordinates
   (let* ((sampler (n:make-fbm-2d #'n:make-perlin-2d :seed 1 :octaves 1))
          (source (aref (n::fractal-sources sampler) 0)))

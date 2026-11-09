@@ -11,7 +11,7 @@
 
 (defun make-hybrid-multi-3d (source
                              &key (seed 0) (octaves 4) (frequency 1) (lacunarity 2)
-                               (persistence 0.25))
+                               (persistence 0.84))
   (let ((sampler (%make-hybrid-multi-3d :source-func source
                                         :octaves octaves
                                         :frequency (f32 frequency)
