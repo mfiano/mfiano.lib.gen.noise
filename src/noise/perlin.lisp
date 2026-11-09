@@ -6,7 +6,7 @@
     (dotimes (i 256)
       (setf (aref table i) i))
     (loop :for i :from 255 :downto 1
-          :for j := (rng:range rng 0 i)
+          :for j := (rng:range rng 0 (1+ i))
           :do (rotatef (aref table i) (aref table j)))
     (replace table table :start1 256)
     table))

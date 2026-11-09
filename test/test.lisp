@@ -93,3 +93,16 @@
                           0
                           0.5f0))))
     (is (< (abs (- (sample :euclidean) (sqrt (sample :euclidean-squared)))) 1f-6))))
+
+(test noise.perlin.tables-are-permutations
+  (dotimes (seed 10)
+    (let ((table (n::perlin-2d-table (n:make-perlin-2d :seed seed))))
+      (is (equal (sort (coerce (subseq table 0 256) 'list) #'<)
+                 (loop :for i :below 256 :collect i)))
+      (is (equalp (subseq table 0 256) (subseq table 256))))))
+
+(test noise.perlin.tables-are-not-only-single-cycles
+  (is (loop :for seed :below 10
+            :for table := (n::perlin-2d-table (n:make-perlin-2d :seed seed))
+            :thereis (loop :for i :below 256
+                           :thereis (= (aref table i) i)))))
