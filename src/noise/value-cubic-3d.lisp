@@ -3,14 +3,10 @@
 (define-constant +value-cubic-3d/normalize+ 3.375f0 :test #'=)
 
 (defstruct (value-cubic-3d
+            (:include sampler-3d)
             (:constructor %make-value-cubic-3d)
             (:predicate nil)
-            (:copier nil))
-  (seed 0 :type u64))
-
-(defmethod (setf seed) (value (sampler value-cubic-3d))
-  (setf (value-cubic-3d-seed sampler) value)
-  (values))
+            (:copier nil)))
 
 (defun make-value-cubic-3d (&key (seed 0))
   (check-type seed u64)
@@ -29,7 +25,7 @@
                  (h4 (value-hash-3d seed c4x c4y c4z)))
              (cubic-interpolate h1 h2 h3 h4 alpha))))
     (declare (inline hash))
-    (let* ((seed (value-cubic-3d-seed sampler))
+    (let* ((seed (%seed sampler))
            (x1 (u64* xi +prime-x+))
            (y1 (u64* yi +prime-y+))
            (z1 (u64* zi +prime-z+))

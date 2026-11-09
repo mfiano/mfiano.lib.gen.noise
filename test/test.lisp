@@ -59,3 +59,19 @@
                       3.25
                       5.5)))
     (is (/= (sample 1) (sample 42)))))
+
+(test noise.value-cubic-3d.seeds-change-output
+  (flet ((sample (seed)
+           (sample-at #'n:sample-value-cubic-3d
+                      (n:make-value-cubic-3d :seed seed)
+                      3.25
+                      5.5
+                      0
+                      0.5f0)))
+    (is (/= (sample 1) (sample 42)))))
+
+(test noise.value-cubic-3d.is-a-sampler
+  (let ((fbm (n:make-fbm-3d #'n:make-value-cubic-3d :seed 1 :octaves 2))
+        (field (n:make-field (n:make-value-cubic-3d :seed 1) :width 2 :height 2)))
+    (is (functionp field))
+    (is (< -1 (sample-at #'n:sample-fbm-3d fbm 3.25 5.5 0 0.5f0) 1))))
