@@ -161,3 +161,32 @@
                            (1- (* (+ base 1) scale))))
                    1f-5))))))
     (is (> low-points 10))))
+
+(test composer.fbm-2d.one-octave-is-the-source-at-large-coordinates
+  (let* ((sampler (n:make-fbm-2d #'n:make-perlin-2d :seed 1 :octaves 1))
+         (source (aref (n::fractal-sources sampler) 0)))
+    (loop :for step :from 1 :to 5
+          :for fraction := (* step 0.15f0)
+          :do (is (= (n:sample-fbm-2d sampler (expt 2 24) fraction 3 0.5f0)
+                     (n:sample-perlin-2d source (expt 2 24) fraction 3 0.5f0))))))
+
+(test composer.all.vary-within-a-cell-at-large-coordinates
+  (loop :for (make sample source) :in (composers)
+        :do (is (= (length (remove-duplicates (large-coordinate-samples make sample source))) 5))))
+
+(test composer.scale-coordinate.is-exact-for-large-products
+  (loop :for (integer fraction factor shift) :in '((16777216 0.15d0 4f0 0.375f0)
+                                                    (1099511627776 0.7d0 1.9873f0 0.123f0)
+                                                    (-4503599627370 0.999d0 2.5f0 0.9f0)
+                                                    (123456789 0.3d0 0.75f0 0.25f0))
+        :do (is (< (scale-coordinate-error integer fraction factor shift) 1d-14))))
+
+(test composer.scale-coordinate.is-finer-than-single-floats-for-small-products
+  (loop :for (integer fraction factor shift) :in '((16777216 0.15d0 2f0 0.375f0)
+                                                    (1000 0.123d0 1.9873f0 0.5f0)
+                                                    (-3 0.75d0 2f0 0.9f0))
+        :do (is (< (scale-coordinate-error integer fraction factor shift) (expt 2d0 -27)))))
+
+(test composer.octave-coordinate.carries-a-fraction-that-rounds-to-one
+  (is (equal (multiple-value-list (n::octave-coordinate 5 (- 1d0 1d-12))) '(6 0f0)))
+  (is (equal (multiple-value-list (n::octave-coordinate -1 0.5d0)) '(-1 0.5f0))))

@@ -31,16 +31,30 @@
          (scale (fractal-3d-scale sampler))
          (x-offset (aref offsets 0))
          (y-offset (aref offsets 1))
-         (z-offset (aref offsets 2)))
+         (z-offset (aref offsets 2))
+         (x-integer xi)
+         (y-integer yi)
+         (z-integer zi)
+         (x-fraction (f64 xf))
+         (y-fraction (f64 yf))
+         (z-fraction (f64 zf)))
+    (declare (type fixnum x-integer y-integer z-integer)
+             (type f64 x-fraction y-fraction z-fraction))
     (loop :with result :of-type f32 := 0f0
           :with weight :of-type f32 := 1f0
           :for source :across (fractal-3d-sources sampler)
-          :for fx :of-type f32 := (* (+ xi xf) frequency) :then (+ (* fx lacunarity) x-offset)
-          :for fy :of-type f32 := (* (+ yi yf) frequency) :then (+ (* fy lacunarity) y-offset)
-          :for fz :of-type f32 := (* (+ zi zf) frequency) :then (+ (* fz lacunarity) z-offset)
+          :for factor :of-type f32 := frequency :then lacunarity
+          :for x-shift :of-type f32 := 0f0 :then x-offset
+          :for y-shift :of-type f32 := 0f0 :then y-offset
+          :for z-shift :of-type f32 := 0f0 :then z-offset
           :for amplitude :of-type f32 := 1f0 :then (* amplitude persistence)
           :while (> weight 0.001f0)
-          :do (let* ((sample (multiple-value-call func source (floor fx) (floor fy) (floor fz)))
+          :do (let* ((sample (sample-octave func
+                                            source
+                                            factor
+                                            (x-integer x-fraction x-shift)
+                                            (y-integer y-fraction y-shift)
+                                            (z-integer z-fraction z-shift)))
                      (signal (* (+ sample +hybrid-multi/offset+) amplitude)))
                 (setf weight (min weight 1f0))
                 (incf result (* weight signal))

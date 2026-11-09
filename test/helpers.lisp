@@ -74,3 +74,33 @@
               (result (musgrave (lambda (source points)
                                   (rational (apply sample source (split-coordinates points)))))))
           (1- (/ (* (+ result 3/10) 2) (+ maximum 3/10))))))))
+
+(defun composers ()
+  (list (list #'n:make-fbm-2d #'n:sample-fbm-2d #'n:make-perlin-2d)
+        (list #'n:make-billow-2d #'n:sample-billow-2d #'n:make-perlin-2d)
+        (list #'n:make-multi-2d #'n:sample-multi-2d #'n:make-perlin-2d)
+        (list #'n:make-hybrid-multi-2d #'n:sample-hybrid-multi-2d #'n:make-perlin-2d)
+        (list #'n:make-ridged-2d #'n:sample-ridged-2d #'n:make-perlin-2d)
+        (list #'n:make-fbm-3d #'n:sample-fbm-3d #'n:make-perlin-3d)
+        (list #'n:make-billow-3d #'n:sample-billow-3d #'n:make-perlin-3d)
+        (list #'n:make-multi-3d #'n:sample-multi-3d #'n:make-perlin-3d)
+        (list #'n:make-hybrid-multi-3d #'n:sample-hybrid-multi-3d #'n:make-perlin-3d)
+        (list #'n:make-ridged-3d #'n:sample-ridged-3d #'n:make-perlin-3d)))
+
+(defun large-coordinate-samples (make sample source)
+  (let ((sampler (funcall make source :seed 1)))
+    (loop :for step :from 1 :to 5
+          :collect (apply sample
+                          sampler
+                          (expt 2 24)
+                          (* step 0.15f0)
+                          3
+                          0.5f0
+                          (when (= (n::dimensions sampler) 3)
+                            (list 0 0.5f0))))))
+
+(defun scale-coordinate-error (integer fraction factor shift)
+  (let ((exact (+ (* (+ integer (rational fraction)) (rational factor)) (rational shift))))
+    (multiple-value-bind (scaled-integer scaled-fraction)
+        (n::scale-coordinate integer fraction factor shift)
+      (abs (- (+ scaled-integer (rational scaled-fraction)) exact)))))

@@ -36,13 +36,24 @@
          (attenuation (ridged-2d-attenuation sampler))
          (scale (fractal-2d-scale sampler))
          (x-offset (aref offsets 0))
-         (y-offset (aref offsets 1)))
+         (y-offset (aref offsets 1))
+         (x-integer xi)
+         (y-integer yi)
+         (x-fraction (f64 xf))
+         (y-fraction (f64 yf)))
+    (declare (type fixnum x-integer y-integer)
+             (type f64 x-fraction y-fraction))
     (loop :for source :across (fractal-2d-sources sampler)
           :for amplitude :of-type f32 := 1f0 :then (* amplitude persistence)
           :for weight := 1f0 :then (s32:clamp (/ sample attenuation) 0f0 1f0)
-          :for fx :of-type f32 := (* (+ xi xf) frequency) :then (+ (* fx lacunarity) x-offset)
-          :for fy :of-type f32 := (* (+ yi yf) frequency) :then (+ (* fy lacunarity) y-offset)
-          :for %sample := (multiple-value-call func source (floor fx) (floor fy))
+          :for factor :of-type f32 := frequency :then lacunarity
+          :for x-shift :of-type f32 := 0f0 :then x-offset
+          :for y-shift :of-type f32 := 0f0 :then y-offset
+          :for %sample := (sample-octave func
+                                         source
+                                         factor
+                                         (x-integer x-fraction x-shift)
+                                         (y-integer y-fraction y-shift))
           :for sample := (* (expt (- 1 (abs %sample)) 2) weight amplitude)
           :sum sample :into result
           :finally (return (1- (* result scale))))))

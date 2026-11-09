@@ -28,3 +28,22 @@
          (z (- c a))
          (alpha^2 (* alpha alpha)))
     (+ (* x alpha^2 alpha) (* y alpha^2) (* z alpha) b)))
+
+(define-ftype split (f64) (values f64 f64))
+(declaim (inline split))
+(defun split (x)
+  (let* ((scaled (* x 134217729d0))
+         (high (- scaled (- scaled x))))
+    (values high (- x high))))
+
+(define-ftype two-product (f64 f64) (values f64 f64))
+(declaim (inline two-product))
+(defun two-product (x y)
+  (let ((product (* x y)))
+    (multiple-value-bind (x-high x-low) (split x)
+      (multiple-value-bind (y-high y-low) (split y)
+        (values product
+                (+ (- (* x-high y-high) product)
+                   (* x-high y-low)
+                   (* x-low y-high)
+                   (* x-low y-low)))))))

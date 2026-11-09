@@ -6,6 +6,46 @@
 
 (define-constant +hybrid-multi/minimum+ (- +hybrid-multi/offset+ 1f0) :test #'=)
 
+(define-ftype %floor-coordinate ((double-float (#.(- (expt 2d0 61))) (#.(expt 2d0 61))))
+    (values fixnum f64))
+(declaim (inline %floor-coordinate))
+(defun %floor-coordinate (coordinate)
+  (let* ((truncated (truncate coordinate))
+         (floored (if (< coordinate (f64 truncated)) (1- truncated) truncated)))
+    (values floored (- coordinate (f64 floored)))))
+
+(define-ftype scale-coordinate (fixnum f64 f32 f32) (values fixnum f64))
+(declaim (inline scale-coordinate))
+(defun scale-coordinate (integer fraction factor shift)
+  (let* ((factor (f64 factor))
+         (whole (f64 integer))
+         (product (* whole factor)))
+    (if (< (abs product) #.(expt 2d0 26))
+        (%floor-coordinate (+ product (* fraction factor) shift))
+        (multiple-value-bind (high low) (two-product whole factor)
+          (let ((floored (values (%floor-coordinate high))))
+            (multiple-value-bind (carry rest)
+                (%floor-coordinate (+ (- high (f64 floored)) low (* fraction factor) shift))
+              (values (+ floored carry) rest)))))))
+
+(define-ftype octave-coordinate (fixnum f64) (values fixnum f32))
+(declaim (inline octave-coordinate))
+(defun octave-coordinate (integer fraction)
+  (let ((single (f32 fraction)))
+    (if (< single 1f0)
+        (values integer single)
+        (values (1+ integer) 0f0))))
+
+(defmacro sample-octave (func source factor &rest axes)
+  `(progn
+     (setf ,@(loop :for (integer fraction shift) :in axes
+                   :append `((values ,integer ,fraction)
+                             (scale-coordinate ,integer ,fraction ,factor ,shift))))
+     (multiple-value-call ,func
+       ,source
+       ,@(loop :for (integer fraction) :in axes
+               :collect `(octave-coordinate ,integer ,fraction)))))
+
 (defstruct (fractal-2d
             (:include sampler-2d)
             (:constructor nil)
