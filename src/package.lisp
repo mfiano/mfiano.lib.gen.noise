@@ -2,10 +2,8 @@
 
 (define-package #:mfiano.lib.gen.noise
   (:local-nicknames
-   (#:lp #:lparallel)
    (#:rng #:mfiano.lib.gen.rng.xoshiro256++)
    (#:pb #:mfiano.lib.gfx.pixel-buffer)
-   (#:pf #:mfiano.lib.gfx.pixel-format)
    (#:s32 #:mfiano.lib.math.scalar.f32)
    (#:s64 #:mfiano.lib.math.scalar.f64))
   (:use #:mfiano.lib.base.util)
@@ -94,5 +92,4 @@
    #:seed)
   ;; noise field functions
   (:export
-   #:make-field
-   #:sample-field))
+   #:make-field))

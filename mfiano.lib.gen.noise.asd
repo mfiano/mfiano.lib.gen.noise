@@ -8,9 +8,7 @@
   (#:mfiano.lib.base
    #:mfiano.lib.gen.rng
    #:mfiano.lib.gfx.pixel-buffer
-   #:mfiano.lib.gfx.pixel-format
-   #:mfiano.lib.math.scalar
-   #:lparallel)
+   #:mfiano.lib.math.scalar)
   :in-order-to ((test-op (test-op #:mfiano.lib.gen.noise/test)))
   :pathname "src"
   :serial t
@@ -57,9 +55,11 @@
   :encoding :utf-8
   :depends-on
   (#:1am
-   #:mfiano.lib.gen.noise)
+   #:mfiano.lib.gen.noise
+   #:mfiano.lib.gfx.pixel-buffer)
   :perform (test-op (o c) (symbol-call '#:1am '#:run))
   :pathname "test"
   :serial t
   :components
-  ((:file "test")))
+  ((:file "helpers")
+   (:file "test")))
