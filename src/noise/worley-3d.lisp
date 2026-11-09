@@ -31,8 +31,7 @@
   (flet ((distance (metric x y z)
            (ecase metric
              (:manhattan (+ (abs x) (abs y) (abs z)))
-             (:euclidean (sqrt (+ (* x x) (* y y) (* z z))))
-             (:euclidean-squared (+ (* x x) (* y y) (* z z)))
+             ((:euclidean :euclidean-squared) (+ (* x x) (* y y) (* z z)))
              (:chebyshev (max (abs x) (abs y) (abs z)))
              (:minkowski4
               (let ((x (* x x x x))

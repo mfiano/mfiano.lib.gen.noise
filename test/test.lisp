@@ -75,3 +75,21 @@
         (field (n:make-field (n:make-value-cubic-3d :seed 1) :width 2 :height 2)))
     (is (functionp field))
     (is (< -1 (sample-at #'n:sample-fbm-3d fbm 3.25 5.5 0 0.5f0) 1))))
+
+(test noise.worley-2d.euclidean-is-the-distance
+  (flet ((sample (metric)
+           (1+ (sample-at #'n:sample-worley-2d
+                          (n:make-worley-2d :seed 1 :metric metric)
+                          3.25
+                          5.5))))
+    (is (< (abs (- (sample :euclidean) (sqrt (sample :euclidean-squared)))) 1f-6))))
+
+(test noise.worley-3d.euclidean-is-the-distance
+  (flet ((sample (metric)
+           (1+ (sample-at #'n:sample-worley-3d
+                          (n:make-worley-3d :seed 1 :metric metric)
+                          3.25
+                          5.5
+                          0
+                          0.5f0))))
+    (is (< (abs (- (sample :euclidean) (sqrt (sample :euclidean-squared)))) 1f-6))))

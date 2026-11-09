@@ -31,8 +31,7 @@
   (flet ((distance (metric x y)
            (ecase metric
              (:manhattan (+ (abs x) (abs y)))
-             (:euclidean (sqrt (+ (* x x) (* y y))))
-             (:euclidean-squared (+ (* x x) (* y y)))
+             ((:euclidean :euclidean-squared) (+ (* x x) (* y y)))
              (:chebyshev (max (abs x) (abs y)))
              (:minkowski4 (expt (the (f64 0d0) (+ (* x x x x) (* y y y y))) 0.25d0)))))
     (declare (inline distance))
