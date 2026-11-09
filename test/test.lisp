@@ -46,3 +46,16 @@
     (is (equal (fill-row field 0 0 8)
                (loop :for x :below 8
                      :collect (gray (sample-at sample sampler (+ origin (* x 1/8)) -1)))))))
+
+(test noise.value-cubic-2d.seeds-change-output
+  (flet ((sample (seed)
+           (sample-at #'n:sample-value-cubic-2d (n:make-value-cubic-2d :seed seed) 3.25 5.5)))
+    (is (/= (sample 1) (sample 42)))))
+
+(test noise.value-cubic-2d.seeds-change-octaves
+  (flet ((sample (seed)
+           (sample-at #'n:sample-fbm-2d
+                      (n:make-fbm-2d #'n:make-value-cubic-2d :seed seed :octaves 1)
+                      3.25
+                      5.5)))
+    (is (/= (sample 1) (sample 42)))))
