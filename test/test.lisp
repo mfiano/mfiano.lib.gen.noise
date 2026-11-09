@@ -106,3 +106,17 @@
             :for table := (n::perlin-2d-table (n:make-perlin-2d :seed seed))
             :thereis (loop :for i :below 256
                            :thereis (= (aref table i) i)))))
+
+(test noise.simplex-2d.gradients-are-even
+  (let ((sampler (n:make-simplex-2d :seed 1))
+        (octants nil)
+        (magnitudes nil))
+    (dotimes (i 8)
+      (dotimes (j 8)
+        (multiple-value-bind (angle magnitude) (simplex-2d-gradient sampler i j)
+          (multiple-value-bind (octant offset) (round (- angle 22.5d0) 45)
+            (is (< (abs offset) 0.5d0))
+            (pushnew octant octants)
+            (push magnitude magnitudes)))))
+    (is (= (length octants) 8))
+    (is (< (/ (reduce #'max magnitudes) (reduce #'min magnitudes)) 1.01d0))))

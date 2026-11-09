@@ -22,3 +22,12 @@
   (multiple-value-bind (xi xf) (floor x)
     (multiple-value-bind (yi yf) (floor y)
       (apply function sampler xi (f32 xf) yi (f32 yf) z))))
+
+(defun simplex-2d-gradient (sampler i j)
+  (let* ((unskew (/ (- 3 (sqrt 3d0)) 6))
+         (x (- i (* (+ i j) unskew)))
+         (y (- j (* (+ i j) unskew)))
+         (gx (sample-at #'n:sample-simplex-2d sampler (+ x 1d-3) y))
+         (gy (sample-at #'n:sample-simplex-2d sampler x (+ y 1d-3))))
+    (values (mod (* (atan gy gx) (/ 180 pi)) 360)
+            (sqrt (+ (* gx gx) (* gy gy))))))
