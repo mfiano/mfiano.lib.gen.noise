@@ -31,3 +31,46 @@
          (gy (sample-at #'n:sample-simplex-2d sampler x (+ y 1d-3))))
     (values (mod (* (atan gy gx) (/ 180 pi)) 360)
             (sqrt (+ (* gx gx) (* gy gy))))))
+
+(defun split-coordinates (coordinates)
+  (loop :for coordinate :in coordinates
+        :nconc (multiple-value-bind (integer fraction) (floor coordinate)
+                 (list integer (f32 fraction)))))
+
+(defun fractal-parameters (sampler)
+  (if (= (n::dimensions sampler) 2)
+      (values (n::fractal-2d-offsets sampler)
+              (n::fractal-2d-frequency sampler)
+              (n::fractal-2d-lacunarity sampler))
+      (values (n::fractal-3d-offsets sampler)
+              (n::fractal-3d-frequency sampler)
+              (n::fractal-3d-lacunarity sampler))))
+
+(defun hybrid-multi-reference (sampler sample &rest coordinates)
+  (multiple-value-bind (offsets frequency lacunarity) (fractal-parameters sampler)
+    (let ((offsets (map 'list #'rational offsets))
+          (persistence (rational (n::fractal-persistence sampler))))
+      (flet ((musgrave (noise)
+               (loop :with points := (mapcar (lambda (coordinate)
+                                               (* (rational coordinate) (rational frequency)))
+                                             coordinates)
+                     :with result := 0
+                     :with weight := 1
+                     :for source :across (n::fractal-sources sampler)
+                     :for octave :from 0
+                     :for amplitude := 1 :then (* amplitude persistence)
+                     :while (> weight 1/1000)
+                     :do (when (plusp octave)
+                           (setf points (mapcar (lambda (point offset)
+                                                  (+ (* point (rational lacunarity)) offset))
+                                                points
+                                                offsets)))
+                         (let ((signal (* (+ (funcall noise source points) 7/10) amplitude)))
+                           (setf weight (min weight 1)
+                                 result (+ result (* weight signal))
+                                 weight (* weight signal)))
+                     :finally (return result))))
+        (let ((maximum (musgrave (constantly 1)))
+              (result (musgrave (lambda (source points)
+                                  (rational (apply sample source (split-coordinates points)))))))
+          (1- (/ (* (+ result 3/10) 2) (+ maximum 3/10))))))))

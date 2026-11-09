@@ -2,6 +2,10 @@
 
 (deftype fractal-octaves () '(integer 1 32))
 
+(define-constant +hybrid-multi/offset+ 0.7f0 :test #'=)
+
+(define-constant +hybrid-multi/minimum+ (- +hybrid-multi/offset+ 1f0) :test #'=)
+
 (defstruct (fractal-2d
             (:include sampler-2d)
             (:constructor nil)
@@ -119,12 +123,16 @@
         :finally (return (/ result))))
 
 (defun %make-fractal-scalar/hybrid-multi (sampler)
-  (loop :with persistence := (fractal-persistence sampler)
-        :for i :below (1- (fractal-octaves sampler))
-        :for amplitude := persistence :then (* amplitude persistence)
-        :for weight := (expt persistence 2) :then (* (max weight 1f0) amplitude)
-        :for result := (+ persistence weight) :then (+ result weight)
-        :finally (return (/ result))))
+  (loop :with result := 0f0
+        :with weight := 1f0
+        :for octave :below (fractal-octaves sampler)
+        :for amplitude := 1f0 :then (* amplitude (fractal-persistence sampler))
+        :while (> weight 0.001f0)
+        :do (let ((signal (* (+ 1f0 +hybrid-multi/offset+) amplitude)))
+              (setf weight (min weight 1f0))
+              (incf result (* weight signal))
+              (setf weight (* weight signal)))
+        :finally (return (/ 2f0 (- result +hybrid-multi/minimum+)))))
 
 (defun %make-fractal-scalar/ridged (sampler)
   (loop :repeat (fractal-octaves sampler)
